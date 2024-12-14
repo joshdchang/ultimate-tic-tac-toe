@@ -117,7 +117,6 @@ function App() {
                             : "bg-violet-400")
                         }
                       >
-                        <Show when={boardWinner() === -1}>Draw</Show>
                         <Show when={boardWinner() === 0}>
                           <IconX class="text-pink-50 size-2/3" />
                         </Show>
