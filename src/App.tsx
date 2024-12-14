@@ -96,7 +96,7 @@ function App() {
   const winner = createMemo(() => getBigWinner(bigBoard));
 
   return (
-    <div class="flex items-center justify-center h-screen">
+    <div class="flex items-center justify-center h-full">
       <div class="w-full h-auto md:w-auto md:h-full aspect-[8/9] p-2 sm:p-4 md:p-8 lg:p-12 flex flex-col gap-4">
         <div class="grid grid-cols-3 gap-1 aspect-square bg-slate-400">
           <For each={bigBoard}>
