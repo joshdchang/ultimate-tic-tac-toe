@@ -1,1 +1,59 @@
 @import "tailwindcss";
+
+@font-face {
+  font-family: "SF Pro";
+  font-weight: 400;
+  src: url("./assets/fonts/sf-pro-text-regular.woff2");
+}
+
+@font-face {
+  font-family: "SF Pro";
+  font-weight: 500;
+  src: url("./assets/fonts/sf-pro-text-medium.woff2");
+}
+
+@font-face {
+  font-family: "SF Pro";
+  font-weight: 600;
+  src: url("./assets/fonts/sf-pro-text-semibold.woff2");
+}
+
+@font-face {
+  font-family: "SF Pro";
+  font-weight: 700;
+  src: url("./assets/fonts/sf-pro-text-bold.woff2");
+}
+
+@font-face {
+  font-family: "SF Pro Display";
+  font-weight: 400;
+  src: url("./assets/fonts/sf-pro-display-regular.woff2");
+}
+
+@font-face {
+  font-family: "SF Pro Display";
+  font-weight: 500;
+  src: url("./assets/fonts/sf-pro-display-medium.woff2");
+}
+
+@font-face {
+  font-family: "SF Pro Display";
+  font-weight: 600;
+  src: url("./assets/fonts/sf-pro-display-semibold.woff2");
+}
+
+@font-face {
+  font-family: "SF Pro Display";
+  font-weight: 700;
+  src: url("./assets/fonts/sf-pro-display-bold.woff2");
+}
+
+@theme {
+  --font-sans: "SF Pro", "Helvetica Neue", "Helvetica", ui-sans-serif, system-ui,
+    sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol",
+    "Noto Color Emoji";
+
+  --font-display: "SF Pro Display", "Helvetica Neue", "Helvetica", ui-sans-serif,
+    system-ui, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol",
+    "Noto Color Emoji";
+}
