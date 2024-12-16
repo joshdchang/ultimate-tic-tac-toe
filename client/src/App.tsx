@@ -60,6 +60,7 @@ const messageSchema = z.object({
     nextBoard: z.number().nullable(),
     player: playerSchema,
     full: z.boolean(),
+    rematch: playerSchema.nullable(),
   }),
 });
 
@@ -143,7 +144,7 @@ function App() {
   const [copied, setCopied] = createSignal(false);
   const [error, setError] = createSignal<string | null>(null);
   const [connected, setConnected] = createSignal(false);
-  const [rematchRequested, setRematchRequested] = createSignal(false);
+  const [rematch, setRematch] = createSignal<Player | null>(null);
 
   const messageListener = (event: MessageEvent) => {
     const data = messageSchema.parse(JSON.parse(event.data));
@@ -153,6 +154,7 @@ function App() {
     setPlayer(data.game.player);
     setGameId(data.game.id);
     setFull(data.game.full);
+    setRematch(data.game.rematch);
   };
 
   const openListener = () => {
@@ -469,18 +471,19 @@ function App() {
                       onClick={() => {
                         if (socket() !== null) {
                           socket()!.send(JSON.stringify({ type: "rematch" }));
-                          setRematchRequested(true);
                         }
                       }}
                       variant="dark"
                     >
                       <Show
-                        when={rematchRequested()}
+                        when={rematch() === player()}
                         fallback={<IconRefresh class="size-5" />}
                       >
                         <IconLoader2 class="size-5 animate-spin" />
                       </Show>
-                      Rematch
+                      <Show when={rematch() === null || rematch() === player()} fallback="Accept">
+                        Rematch
+                      </Show>
                     </Button>
                   </Show>
                   <Show when={!full()}>

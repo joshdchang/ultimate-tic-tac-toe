@@ -126,6 +126,7 @@ const server = Bun.serve<WebSocketData>({
                 full: game.full,
                 player: player.num,
                 id: gameId,
+                rematch: game.rematch,
               },
             })
           );
@@ -232,6 +233,7 @@ const server = Bun.serve<WebSocketData>({
                   full: game.full,
                   player: player.num,
                   id: ws.data.gameId,
+                  rematch: game.rematch,
                 },
               })
             );
@@ -243,23 +245,24 @@ const server = Bun.serve<WebSocketData>({
             game.turn = game.turn === 0 ? 1 : 0;
             game.nextBoard = null;
             game.rematch = null;
-            for (const player of game.players) {
-              player.socket.send(
-                JSON.stringify({
-                  type: "game",
-                  game: {
-                    bigBoard: game.bigBoard,
-                    turn: game.turn,
-                    nextBoard: game.nextBoard,
-                    full: game.full,
-                    player: player.num,
-                    id: ws.data.gameId,
-                  },
-                })
-              );
-            }
           } else {
             game.rematch = ws.data.player;
+          }
+          for (const player of game.players) {
+            player.socket.send(
+              JSON.stringify({
+                type: "game",
+                game: {
+                  bigBoard: game.bigBoard,
+                  turn: game.turn,
+                  nextBoard: game.nextBoard,
+                  full: game.full,
+                  player: player.num,
+                  id: ws.data.gameId,
+                  rematch: game.rematch,
+                },
+              })
+            );
           }
         }
       } catch (error) {
@@ -284,6 +287,7 @@ const server = Bun.serve<WebSocketData>({
               full: game.full,
               player: ws.data.player,
               id: ws.data.gameId,
+              rematch: game.rematch,
             },
           })
         );
