@@ -75,7 +75,7 @@ type Game = {
   nextBoard: number | null;
   full: boolean;
   players: { num: number; socket: ServerWebSocket<WebSocketData> }[];
-  rematch: boolean;
+  rematch: Player | null;
 };
 
 const games = new Map<string, Game>();
@@ -98,7 +98,9 @@ const server = Bun.serve<WebSocketData>({
       console.log(url.pathname);
       let gameId: string;
       let playerNum: Player;
-      if (url.pathname === "/join") {
+      if (url.pathname === "/ping") {
+        return new Response("Pong");
+      } else if (url.pathname === "/join") {
         const gameIdParam = url.searchParams.get("gameId");
         if (gameIdParam === null) {
           return new Response("Missing gameId", { status: 400 });
@@ -136,7 +138,7 @@ const server = Bun.serve<WebSocketData>({
           nextBoard: null,
           full: false,
           players: [],
-          rematch: false,
+          rematch: null,
         });
         playerNum = 0;
       } else if (url.pathname === "/resume") {
@@ -236,11 +238,11 @@ const server = Bun.serve<WebSocketData>({
           }
         } else if (data.type === "rematch") {
           console.log("Rematch");
-          if (game.rematch) {
+          if (game.rematch !== null && game.rematch !== ws.data.player) {
             game.bigBoard = createBigBoard();
             game.turn = game.turn === 0 ? 1 : 0;
             game.nextBoard = null;
-            game.rematch = false;
+            game.rematch = null;
             for (const player of game.players) {
               player.socket.send(
                 JSON.stringify({
@@ -257,7 +259,7 @@ const server = Bun.serve<WebSocketData>({
               );
             }
           } else {
-            game.rematch = true;
+            game.rematch = ws.data.player;
           }
         }
       } catch (error) {
