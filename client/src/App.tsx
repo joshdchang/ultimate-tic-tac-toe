@@ -1,3 +1,5 @@
+// TODO: better error messages
+
 import {
   IconCheck,
   IconCircle,
@@ -145,6 +147,11 @@ function App() {
   const [error, setError] = createSignal<string | null>(null);
   const [connected, setConnected] = createSignal(false);
   const [rematch, setRematch] = createSignal<Player | null>(null);
+  const [confirmMove, setConfirm] = createSignal(false);
+  const [proposedMove, setProposedMove] = createSignal<{
+    board: number;
+    cell: number;
+  } | null>(null);
 
   const messageListener = (event: MessageEvent) => {
     const data = messageSchema.parse(JSON.parse(event.data));
@@ -178,7 +185,7 @@ function App() {
     // load from local storage
     const data = localStorage.getItem("data");
     if (data) {
-      const { bigBoard, turn, nextBoard, status, gameId, player, full } =
+      const { bigBoard, turn, nextBoard, status, gameId, player, full, proposedMove } =
         JSON.parse(data);
       setBigBoard(bigBoard);
       setTurn(turn);
@@ -187,6 +194,7 @@ function App() {
       setGameId(gameId);
       setPlayer(player);
       setFull(full);
+      setProposedMove(proposedMove);
 
       if (status === AppStatus.Remote) {
         const newSocket = new WebSocket(
@@ -199,6 +207,20 @@ function App() {
         newSocket.addEventListener("error", errorListener);
       }
     }
+
+    // if window is less than 640px, make confirm move true
+    if (window.innerWidth < 640) {
+      setConfirm(true);
+    }
+    const resizeListener = () => {
+      if (window.innerWidth < 640) {
+        setConfirm(true);
+      } else {
+        setConfirm(false);
+      }
+    };
+    window.addEventListener("resize", resizeListener);
+    onCleanup(() => window.removeEventListener("resize", resizeListener));
   });
 
   onCleanup(() => {
@@ -220,9 +242,32 @@ function App() {
         gameId: gameId(),
         player: player(),
         full: full(),
+        proposedMove: proposedMove(),
       })
     );
   });
+
+  const move = (board: number, cell: number) => {
+    setProposedMove(null);
+    setBigBoard(board, cell, turn());
+    setTurn(turn() === 0 ? 1 : 0);
+
+    if (getWinner(bigBoard[cell]) !== null) {
+      setNextBoard(null);
+    } else {
+      setNextBoard(cell);
+    }
+
+    if (socket() !== null) {
+      socket()!.send(
+        JSON.stringify({
+          type: "move",
+          board,
+          cell,
+        })
+      );
+    }
+  };
 
   const winner = createMemo(() => getBigWinner(bigBoard));
 
@@ -351,23 +396,11 @@ function App() {
                                   if (cell !== null) {
                                     return;
                                   }
-                                  setBigBoard(i(), j(), turn());
-                                  setTurn(turn() === 0 ? 1 : 0);
 
-                                  if (getWinner(bigBoard[j()]) !== null) {
-                                    setNextBoard(null);
+                                  if (confirmMove()) {
+                                    setProposedMove({ board: i(), cell: j() });
                                   } else {
-                                    setNextBoard(j());
-                                  }
-
-                                  if (socket() !== null) {
-                                    socket()!.send(
-                                      JSON.stringify({
-                                        type: "move",
-                                        board: i(),
-                                        cell: j(),
-                                      })
-                                    );
+                                    move(i(), j());
                                   }
                                 }}
                               >
@@ -376,6 +409,20 @@ function App() {
                                 </Show>
                                 <Show when={cell === 1}>
                                   <IconCircle class="text-violet-600 size-2/3" />
+                                </Show>
+                                <Show
+                                  when={
+                                    confirmMove() &&
+                                    proposedMove()?.board === i() &&
+                                    proposedMove()?.cell === j()
+                                  }
+                                >
+                                  <Show when={turn() === 0}>
+                                    <IconX class="text-pink-300 size-2/3" />
+                                  </Show>
+                                  <Show when={turn() === 1}>
+                                    <IconCircle class="text-violet-300 size-2/3" />
+                                  </Show>
                                 </Show>
                               </button>
                             )}
@@ -387,8 +434,8 @@ function App() {
                 }}
               </For>
             </div>
-            <div class="h-16 flex items-center justify-between flex-col sm:flex-row gap-6 px-2">
-              <div class="flex items-center gap-2 text-xl text-slate-800">
+            <div class="flex items-center justify-between flex-col sm:flex-row gap-6 px-2">
+              <div class="flex items-center gap-2 text-xl text-slate-800 h-16">
                 <Show
                   when={winner() === null}
                   fallback={
@@ -415,6 +462,19 @@ function App() {
                   </Show>
                   <Show when={status() === AppStatus.Remote} fallback="up next">
                     {player() === turn() ? "Your" : "Opponent's"} turn
+                  </Show>
+                  <Show when={confirmMove() && proposedMove() !== null}>
+                    <Button
+                      onClick={() => {
+                        if (proposedMove() !== null) {
+                          move(proposedMove()!.board, proposedMove()!.cell);
+                        }
+                      }}
+                      class="ml-3"
+                    >
+                      <IconCheck class="size-5 text-green-600" />
+                      Confirm
+                    </Button>
                   </Show>
                 </Show>
               </div>
@@ -481,7 +541,10 @@ function App() {
                       >
                         <IconLoader2 class="size-5 animate-spin" />
                       </Show>
-                      <Show when={rematch() === null || rematch() === player()} fallback="Accept">
+                      <Show
+                        when={rematch() === null || rematch() === player()}
+                        fallback="Accept"
+                      >
                         Rematch
                       </Show>
                     </Button>
